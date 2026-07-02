@@ -1,4 +1,4 @@
-<!-- ACE_Registro_Acuerdos_Comite v1.5 — Emparejamiento responsable->usuario de Monday por CORREO (alias jonathan.bravo@londoncg.mx->.com) con respaldo por nombre; si no hay usuario de Monday, el responsable va a update nativo. Ivan Valdespin (sin acento) en catalogo. v1.4 — Lista de participantes con scroll (4 visibles); alta de participantes en popup; responsable (captura rápida y mesa) desde el catálogo de la app con alta rápida solo-nombre y catálogo persistente; completar correo del responsable en la mesa; al elegir Tipo=Acuerdo se autollenan fecha (hoy) y notas (editables). v1.3 — Jonathan Lozano añadido a Comité Tecnológico; los participantes nuevos se guardan en un catálogo persistente (localStorage) para futuras sesiones y se añaden a la sesión con el +. v1.2 — Panel de participantes por comité (predeterminados editables/agregables) y correo de resumen (mailto) a los participantes al registrar. v1.1 — Estética alineada a la Guía Visual del Programa ACE (hero ACE + cuerpo estilo Monday: Figtree/JetBrains Mono, lienzo cálido, acento #D9481B). Lógica sin cambios. v1.0 — App de minutas para Comité de Negocio y Comité Tecnológico. Captura acuerdos/actividades en una mesa de trabajo (borrador con localStorage), se depuran en sesión y al pulsar "Registrar" se crean en el tablero Monday "Acuerdos y Actividades de Comités ACE" (18419790313). Responsable externo -> update nativo del elemento. -->
+<!-- ACE_Registro_Acuerdos_Comite v1.7 — Botón "Ver resumen de la sesión" en la mesa de trabajo y en la pantalla de éxito, que abre un modal amplio con el resumen (participantes, acuerdos, actividades) con diseño ACE. v1.6 — El correo ya no se abre automáticamente al registrar; solo desde el botón de la pantalla final. Cuerpo con formato definido (Comité|Sesión|Fecha, separadores, participantes, acuerdos con Fecha, actividades con Responsable y Compromiso, pie PMO). Botón "Ver acuerdos y actividades en Monday" (enlace al tablero). v1.5 — Emparejamiento responsable->usuario de Monday por CORREO (alias jonathan.bravo@londoncg.mx->.com) con respaldo por nombre; si no hay usuario de Monday, el responsable va a update nativo. Ivan Valdespin (sin acento) en catalogo. v1.4 — Lista de participantes con scroll (4 visibles); alta de participantes en popup; responsable (captura rápida y mesa) desde el catálogo de la app con alta rápida solo-nombre y catálogo persistente; completar correo del responsable en la mesa; al elegir Tipo=Acuerdo se autollenan fecha (hoy) y notas (editables). v1.3 — Jonathan Lozano añadido a Comité Tecnológico; los participantes nuevos se guardan en un catálogo persistente (localStorage) para futuras sesiones y se añaden a la sesión con el +. v1.2 — Panel de participantes por comité (predeterminados editables/agregables) y correo de resumen (mailto) a los participantes al registrar. v1.1 — Estética alineada a la Guía Visual del Programa ACE (hero ACE + cuerpo estilo Monday: Figtree/JetBrains Mono, lienzo cálido, acento #D9481B). Lógica sin cambios. v1.0 — App de minutas para Comité de Negocio y Comité Tecnológico. Captura acuerdos/actividades en una mesa de trabajo (borrador con localStorage), se depuran en sesión y al pulsar "Registrar" se crean en el tablero Monday "Acuerdos y Actividades de Comités ACE" (18419790313). Responsable externo -> update nativo del elemento. -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -127,6 +127,33 @@ input:focus,textarea:focus,select:focus{outline:0;border-color:var(--m-ace);box-
 .modal-head span{font-family:var(--m-body);font-weight:800;font-size:16px;color:var(--n-strong)}
 .modal-x{background:none;border:0;font-size:24px;line-height:1;color:var(--n-soft);cursor:pointer;padding:0 6px;border-radius:8px}
 .modal-x:hover{background:#f1f0ec;color:var(--err)}
+
+/* v1.7 — Resumen de sesión (modal amplio, estilo ACE) */
+.sum-box{background:var(--card);border-radius:18px;width:100%;max-width:760px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(10,17,56,.35)}
+.sum-hd{position:relative;background:radial-gradient(120% 160% at 85% -20%,#243089 0%,#121A5C 42%,#0A1138 100%);color:#fff;padding:20px 24px}
+.sum-hd h3{font-family:var(--hsans);font-weight:800;font-size:20px;letter-spacing:-.3px}
+.sum-hd .cls{position:absolute;top:14px;right:16px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);color:#fff;font-size:20px;line-height:1;border-radius:8px;cursor:pointer;padding:2px 10px}
+.sum-hd .cls:hover{background:rgba(255,255,255,.24)}
+.sum-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.sum-meta .m{font-family:var(--m-mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);padding:5px 10px;border-radius:7px;color:#fff}
+.sum-meta .m b{color:var(--ace-l);font-weight:600}
+.sum-bd{padding:20px 24px;overflow:auto;background:var(--canvas)}
+.sum-sec{margin-bottom:20px}.sum-sec:last-child{margin-bottom:0}
+.sum-sec>.h{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.sum-sec>.h .eb{font-family:var(--m-mono);font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--m-ace);background:var(--m-ace-t);padding:3px 9px;border-radius:6px}
+.sum-sec>.h .n{font-family:var(--m-mono);font-size:11px;color:var(--n-soft)}
+.sum-parts{display:flex;flex-wrap:wrap;gap:7px}
+.sum-chip{background:#fff;border:1px solid var(--card-bd);border-radius:999px;padding:5px 12px;font-size:12px;color:var(--n-strong)}
+.sum-chip span{font-family:var(--m-mono);font-size:10px;color:var(--n-mid);margin-left:6px}
+.sum-item{background:#fff;border:1px solid var(--card-bd);border-radius:11px;padding:11px 14px;margin-bottom:8px;display:flex;gap:11px;box-shadow:var(--m-elev)}
+.sum-item .idx{font-family:var(--m-mono);font-weight:700;color:var(--m-ace);font-size:13px;flex:0 0 auto}
+.sum-item .body{flex:1;min-width:0}
+.sum-item .t{font-size:13.5px;font-weight:600;color:var(--n-strong);line-height:1.35}
+.sum-item .meta{margin-top:6px;display:flex;flex-wrap:wrap;gap:6px}
+.sum-item .tag{font-family:var(--m-mono);font-size:10px;color:var(--n-mid);background:#f4f2ee;border:1px solid #e7e4dd;border-radius:6px;padding:2px 7px}
+.sum-empty{font-size:12.5px;color:var(--n-soft);padding:6px 2px}
+.sum-foot{border-top:1px dashed var(--card-bd);margin-top:16px;padding-top:12px;font-size:11.5px;color:var(--n-mid);line-height:1.5}
+.sum-foot b{color:var(--m-ace);font-weight:600}
 </style>
 </head>
 <body>
@@ -138,7 +165,7 @@ input:focus,textarea:focus,select:focus{outline:0;border-color:var(--m-ace);box-
       <radialGradient id="o" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#3D6BFF" stop-opacity=".5"/><stop offset="1" stop-color="#3D6BFF" stop-opacity="0"/></radialGradient></defs>
       <rect x="10" y="130" width="250" height="90" fill="url(#d)" opacity=".55"/><circle cx="920" cy="30" r="130" fill="url(#o)"/>
     </svg>
-    <span class="badge-v">PMO · ACE · v1.5</span>
+    <span class="badge-v">PMO · ACE · v1.7</span>
     <h1>Registro de Acuerdos de Comité</h1>
     <div class="sub">Documenta en vivo los acuerdos y actividades de las sesiones de decisión. Se depuran en la mesa de trabajo y, al cerrar la sesión, se registran en el tablero de la PMO.</div>
     <div class="hero-foot">
@@ -225,6 +252,7 @@ input:focus,textarea:focus,select:focus{outline:0;border-color:var(--m-ace);box-
       <div class="toolbar">
         <div class="count"><b id="count">0</b> registro(s) en borrador</div>
         <div style="display:flex;gap:10px">
+          <button type="button" class="btn btn-ghost" id="summary-btn">Ver resumen de la sesión</button>
           <button type="button" class="btn btn-ghost" id="add-row">+ Agregar nuevo</button>
           <button type="button" class="btn btn-primary" id="register" disabled>Registrar en Monday</button>
         </div>
@@ -241,8 +269,10 @@ input:focus,textarea:focus,select:focus{outline:0;border-color:var(--m-ace);box-
     <ul id="success-list"></ul>
     <div id="mail-wrap" style="display:none;margin-top:14px">
       <a id="mail-link" class="btn btn-add" style="text-decoration:none;display:inline-block" href="#">✉  Enviar correo a los participantes</a>
-      <div class="mail-note">Se abrirá tu cliente de correo con los participantes en “Para” y el resumen de la sesión (acuerdos y tareas). Revísalo y envía.</div>
+      <div class="mail-note">Al pulsar el botón se abrirá tu cliente de correo con los participantes en «Para» y el resumen (acuerdos y tareas). Revísalo y envía.</div>
     </div>
+    <div style="margin-top:12px"><button type="button" class="btn btn-ghost" id="summary-btn2">Ver resumen de la sesión</button></div>
+    <div style="margin-top:12px"><a class="btn btn-ghost" style="text-decoration:none;display:inline-block" target="_blank" rel="noopener" href="https://gim-holdings-company.monday.com/boards/18419790313">Ver acuerdos y actividades en Monday →</a></div>
     <div style="margin-top:20px"><button class="btn btn-primary" id="nueva">Iniciar nueva sesión</button></div>
   </section>
 
@@ -261,7 +291,18 @@ input:focus,textarea:focus,select:focus{outline:0;border-color:var(--m-ace);box-
     </div>
   </div>
 
-  <div class="foot">PROGRAMA ACE · PMO &nbsp;·&nbsp; <b>Registro de Acuerdos de Comité</b> v1.5 &nbsp;·&nbsp; responsable→usuario Monday por correo (con alias) &nbsp;·&nbsp; datos en Monday (fuente única de verdad)</div>
+  <div class="modal-ovl" id="summary-modal">
+    <div class="sum-box">
+      <div class="sum-hd">
+        <button type="button" class="cls" id="summary-close">&times;</button>
+        <h3>Resumen de la sesión</h3>
+        <div class="sum-meta" id="summary-meta"></div>
+      </div>
+      <div class="sum-bd" id="summary-body"></div>
+    </div>
+  </div>
+
+  <div class="foot">PROGRAMA ACE · PMO &nbsp;·&nbsp; <b>Registro de Acuerdos de Comité</b> v1.7 &nbsp;·&nbsp; resumen de sesión (estilo ACE) + correo manual + enlace al tablero &nbsp;·&nbsp; datos en Monday (fuente única de verdad)</div>
 </div>
 
 <script src="monday-sdk.js"></script>
@@ -344,6 +385,10 @@ function wireParticipants(){
   $('add-close').addEventListener('click',closeModal);
   $('add-done').addEventListener('click',closeModal);
   $('add-modal').addEventListener('click',e=>{if(e.target.id==='add-modal')closeModal();});
+  $('summary-btn').addEventListener('click',()=>openSummary(false));
+  $('summary-btn2').addEventListener('click',()=>openSummary(true));
+  $('summary-close').addEventListener('click',closeSummary);
+  $('summary-modal').addEventListener('click',e=>{if(e.target.id==='summary-modal')closeSummary();});
   $('add-list').addEventListener('click',e=>{const b=e.target.closest('.add-chip');if(!b)return;const p=catalogList().find(x=>norm(x.name)===norm(b.dataset.name));if(p){session.participants.push({name:p.name,email:p.email||''});renderParticipants();renderAddList();save();}});
   $('np-add').addEventListener('click',()=>{const n=$('np-name').value.trim(),em=$('np-email').value.trim();if(!n)return;addCatalogPerson(n,em);$('np-name').value='';$('np-email').value='';renderAddList();$('q-resp').innerHTML=respSelectHTML('',true);});
 }
@@ -463,10 +508,11 @@ $('register').addEventListener('click',async()=>{
       if(!muId && d.rname){ await monday.api(qUpd,{variables:{iid:id,body:'Responsable: '+d.rname+(d.remail?(' · '+d.remail):'')}}); }
       created.push({id:id,name:d.acuerdo.trim()||'(sin título)',tipo:d.tipo});
     }
+    lastSnap={dr:JSON.parse(JSON.stringify(drafts)),parts:JSON.parse(JSON.stringify(session.participants||[])),comiteNm:comiteName(),sesLbl:sessionLabel(),fechaISO:todayISO()};
     const mailHref=(session.participants&&session.participants.length)?buildMailto():null;
     drafts=[]; save();
     $('app').style.display='none';
-    if(mailHref){ $('mail-link').href=mailHref; $('mail-wrap').style.display='block'; try{$('mail-link').click();}catch(e){} } else { $('mail-wrap').style.display='none'; }
+    if(mailHref){ $('mail-link').href=mailHref; $('mail-wrap').style.display='block'; } else { $('mail-wrap').style.display='none'; }
     $('success-title').textContent=created.length+' registro(s) creado(s)';
     $('success-msg').textContent='Sesión: '+sessionLabel();
     $('success-list').innerHTML=created.map(c=>'<li><span>'+esc(c.name)+' · '+c.tipo+'</span><a target="_blank" rel="noopener" href="https://'+ACCOUNT_SLUG+'.monday.com/boards/'+BOARD_ID+'/pulses/'+c.id+'">Ver →</a></li>').join('');
@@ -477,21 +523,49 @@ $('register').addEventListener('click',async()=>{
 $('nueva').addEventListener('click',()=>{ try{localStorage.removeItem(LS);}catch(e){} location.reload(); });
 
 function buildMailto(){
+  const SEP='────────────────────────────────────────';
   const to=(session.participants||[]).map(p=>p.email).filter(Boolean).join(',');
   const acs=drafts.filter(d=>d.tipo==='Acuerdo'), acts=drafts.filter(d=>d.tipo==='Actividad');
   const L=[];
-  L.push('Sesión: '+sessionLabel());
-  L.push('Comité: '+comiteName());
-  L.push('Fecha: '+todayISO());
-  L.push(''); L.push('PARTICIPANTES:');
+  L.push('Comité: '+comiteName()+'  |  Sesión: '+sessionLabel()+'  |  Fecha: '+todayISO());
+  L.push(SEP);
+  L.push('PARTICIPANTES:');
   (session.participants||[]).forEach(p=>L.push('- '+p.name+(p.email?(' <'+p.email+'>'):'')));
   L.push(''); L.push('ACUERDOS ('+acs.length+'):');
-  acs.length?acs.forEach((d,i)=>L.push((i+1)+'. '+d.acuerdo)):L.push('- (ninguno)');
+  acs.length?acs.forEach((d,i)=>L.push((i+1)+'. '+d.acuerdo+'  |  Fecha: '+(d.fecha||todayISO()))):L.push('- (ninguno)');
   L.push(''); L.push('ACTIVIDADES / TAREAS COMPROMISO ('+acts.length+'):');
-  acts.length?acts.forEach((d,i)=>L.push((i+1)+'. '+d.acuerdo+(d.rname?(' | Responsable: '+d.rname+(d.remail?(' <'+d.remail+'>'):'')):'')+(d.fecha?(' | Compromiso: '+d.fecha):''))):L.push('- (ninguna)');
-  L.push(''); L.push('— Registrado en Monday · Acuerdos y Actividades de Comités ACE');
+  acts.length?acts.forEach((d,i)=>L.push((i+1)+'. '+d.acuerdo+(d.rname?('  |  Responsable: '+d.rname+(d.remail?(' <'+d.remail+'>'):'')):'')+(d.fecha?('  |  Compromiso: '+d.fecha):''))):L.push('- (ninguna)');
+  L.push(SEP);
+  L.push('* PMO — Registro realizado en el tablero de Monday "Acuerdos y Actividades de Comités ACE" para su gestión y control.');
   return 'mailto:'+to+'?subject='+encodeURIComponent('Acuerdos y actividades — '+sessionLabel())+'&body='+encodeURIComponent(L.join('\n'));
 }
+
+let lastSnap=null;
+function sumMetaHTML(comiteNm,sesLbl,fechaISO){return '<span class="m">COMITÉ · <b>'+esc(comiteNm||'—')+'</b></span><span class="m">SESIÓN · <b>'+esc(sesLbl||'—')+'</b></span><span class="m">FECHA · <b>'+esc(fechaISO)+'</b></span>';}
+function summaryHTML(dr,parts,fechaISO){
+  const acs=dr.filter(d=>d.tipo==='Acuerdo'), acts=dr.filter(d=>d.tipo==='Actividad');
+  let h='';
+  h+='<div class="sum-sec"><div class="h"><span class="eb">Participantes</span><span class="n">'+(parts||[]).length+'</span></div><div class="sum-parts">';
+  if((parts||[]).length)parts.forEach(p=>h+='<div class="sum-chip">'+esc(p.name)+(p.email?'<span>'+esc(p.email)+'</span>':'')+'</div>'); else h+='<div class="sum-empty">Sin participantes.</div>';
+  h+='</div></div>';
+  h+='<div class="sum-sec"><div class="h"><span class="eb">Acuerdos</span><span class="n">'+acs.length+'</span></div>';
+  if(acs.length)acs.forEach((d,i)=>{h+='<div class="sum-item"><div class="idx">'+(i+1)+'</div><div class="body"><div class="t">'+esc(d.acuerdo||'(sin título)')+'</div><div class="meta"><span class="tag">Fecha: '+esc(d.fecha||fechaISO)+'</span>'+((d.notas&&d.notas.trim())?'<span class="tag">'+esc(d.notas.trim())+'</span>':'')+'</div></div></div>';}); else h+='<div class="sum-empty">Sin acuerdos.</div>';
+  h+='</div>';
+  h+='<div class="sum-sec"><div class="h"><span class="eb">Actividades / tareas compromiso</span><span class="n">'+acts.length+'</span></div>';
+  if(acts.length)acts.forEach((d,i)=>{h+='<div class="sum-item"><div class="idx">'+(i+1)+'</div><div class="body"><div class="t">'+esc(d.acuerdo||'(sin título)')+'</div><div class="meta">'+(d.rname?'<span class="tag">Responsable: '+esc(d.rname)+(d.remail?' · '+esc(d.remail):'')+'</span>':'')+(d.fecha?'<span class="tag">Compromiso: '+esc(d.fecha)+'</span>':'')+'</div></div></div>';}); else h+='<div class="sum-empty">Sin actividades.</div>';
+  h+='</div>';
+  h+='<div class="sum-foot"><b>PMO</b> — Tablero de Monday «Acuerdos y Actividades de Comités ACE» para su gestión y control.</div>';
+  return h;
+}
+function openSummary(fromSuccess){
+  let dr,parts,comiteNm,sesLbl,fechaISO;
+  if(fromSuccess&&lastSnap){dr=lastSnap.dr;parts=lastSnap.parts;comiteNm=lastSnap.comiteNm;sesLbl=lastSnap.sesLbl;fechaISO=lastSnap.fechaISO;}
+  else {dr=drafts;parts=session.participants||[];comiteNm=comiteName();sesLbl=sessionLabel();fechaISO=todayISO();}
+  $('summary-meta').innerHTML=sumMetaHTML(comiteNm,sesLbl,fechaISO);
+  $('summary-body').innerHTML=summaryHTML(dr,parts,fechaISO);
+  $('summary-modal').classList.add('on');
+}
+function closeSummary(){$('summary-modal').classList.remove('on');}
 
 async function init(){
   load(); loadPeople();
