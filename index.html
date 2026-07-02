@@ -1,0 +1,513 @@
+<!-- ACE_Registro_Acuerdos_Comite v1.5 — Emparejamiento responsable->usuario de Monday por CORREO (alias jonathan.bravo@londoncg.mx->.com) con respaldo por nombre; si no hay usuario de Monday, el responsable va a update nativo. Ivan Valdespin (sin acento) en catalogo. v1.4 — Lista de participantes con scroll (4 visibles); alta de participantes en popup; responsable (captura rápida y mesa) desde el catálogo de la app con alta rápida solo-nombre y catálogo persistente; completar correo del responsable en la mesa; al elegir Tipo=Acuerdo se autollenan fecha (hoy) y notas (editables). v1.3 — Jonathan Lozano añadido a Comité Tecnológico; los participantes nuevos se guardan en un catálogo persistente (localStorage) para futuras sesiones y se añaden a la sesión con el +. v1.2 — Panel de participantes por comité (predeterminados editables/agregables) y correo de resumen (mailto) a los participantes al registrar. v1.1 — Estética alineada a la Guía Visual del Programa ACE (hero ACE + cuerpo estilo Monday: Figtree/JetBrains Mono, lienzo cálido, acento #D9481B). Lógica sin cambios. v1.0 — App de minutas para Comité de Negocio y Comité Tecnológico. Captura acuerdos/actividades en una mesa de trabajo (borrador con localStorage), se depuran en sesión y al pulsar "Registrar" se crean en el tablero Monday "Acuerdos y Actividades de Comités ACE" (18419790313). Responsable externo -> update nativo del elemento. -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registro de Acuerdos de Comité — ACE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800;900&family=Caveat:wght@600;700&family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#10131C; --ink2:#39404E; --muted:#6B7280; --line:#E5E7EB;
+  --navy:#0A1138; --navy2:#161E55; --blue:#2E37A4; --ace:#E54A12; --ace-l:#FF6A1A;
+  --hsans:'Archivo','Arial Black',Arial,sans-serif; --script:'Caveat',cursive;
+  --canvas:#EEEEEA; --card:#FFFFFF; --card-bd:#E4E2DC; --mesh:#EEF1F3;
+  --m-body:'Figtree',system-ui,sans-serif; --m-mono:'JetBrains Mono',monospace;
+  --st-green:#00C875; --st-red:#E2445C; --st-blue:#0073EA; --st-amber:#FDAB3D;
+  --m-ace:#D9481B; --m-ace-h:#C23F14; --m-ace-t:#FBEAE2;
+  --n-strong:#1F2430; --n-mid:#6B7080; --n-soft:#9699A6;
+  --m-elev:0 1px 2px rgba(20,21,26,.04),0 10px 26px rgba(20,21,26,.07);
+  --field-line:#E4E2DC; --ok:#1f8a4c; --err:#E2445C;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--canvas);color:var(--n-strong);font-family:var(--m-body);line-height:1.5;-webkit-font-smoothing:antialiased;padding:22px}
+.wrap{max-width:1000px;margin:0 auto}
+/* HERO — zona ACE */
+.head{position:relative;overflow:hidden;border-radius:22px;color:#fff;padding:28px 34px 18px;background:radial-gradient(120% 160% at 85% -20%,#243089 0%,#121A5C 42%,#0A1138 100%);box-shadow:0 18px 50px rgba(10,17,56,.35)}
+.head .deco{position:absolute;inset:0;pointer-events:none}
+.head h1{font-family:var(--hsans);font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.5px;position:relative;z-index:2}
+.head .sub{position:relative;z-index:2;margin-top:7px;font-size:14px;font-weight:500;color:#C7CEF5;max-width:680px}
+.head .hero-foot{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:20px;padding-top:14px;border-top:1px solid rgba(255,255,255,.14)}
+.head .meta{display:flex;flex-wrap:wrap;gap:8px}
+.head .mchip{font-family:var(--m-mono);font-size:10px;font-weight:600;letter-spacing:.06em;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.20);color:#fff;padding:5px 10px;border-radius:7px}
+.head .mchip b{color:var(--ace-l);font-weight:600}
+.head .tagline{font-family:var(--script);font-size:24px;font-weight:700;opacity:.95;white-space:nowrap;color:#fff}
+.head .badge-v{position:absolute;top:26px;right:30px;z-index:3;font-family:var(--hsans);font-size:12px;font-weight:700;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.32);padding:6px 13px;border-radius:20px;letter-spacing:.4px}
+/* Banner */
+.banner{margin-top:14px;border-radius:12px;padding:11px 15px;font-size:13px;display:none}
+.banner.warn{display:block;background:var(--m-ace-t);border:1px solid #F0C9BC;color:#9a3d16}
+/* Card — zona Monday */
+.card{background:var(--card);border:1px solid var(--card-bd);border-radius:14px;padding:20px 22px;margin-top:16px;box-shadow:var(--m-elev)}
+.sec-eyebrow{display:inline-block;font-family:var(--m-mono);font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--m-ace);background:var(--m-ace-t);padding:3px 9px;border-radius:6px}
+.sec-title{font-family:var(--m-body);font-weight:800;font-size:19px;letter-spacing:-.025em;color:var(--n-strong);margin:9px 0 3px}
+.sec-desc{font-size:13px;color:var(--n-mid);margin-bottom:14px;line-height:1.55}
+label.lbl{display:block;font-family:var(--m-body);font-weight:700;font-size:12.5px;color:var(--n-strong);margin-bottom:6px}
+label.lbl .opt{color:var(--n-soft);font-weight:500;font-size:12px;margin-left:6px}
+input[type=text],input[type=date],textarea,select{width:100%;font-family:var(--m-body);font-size:14px;color:var(--n-strong);background:#fff;border:1.5px solid var(--card-bd);border-radius:9px;padding:9px 11px;transition:.15s}
+textarea{min-height:42px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:0;border-color:var(--m-ace);box-shadow:0 0 0 3px rgba(217,72,27,.14)}
+.grid-sesion{display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:end}
+.grid-cap{display:grid;grid-template-columns:2fr 1.4fr 1fr auto;gap:12px;align-items:end}
+@media(max-width:760px){.grid-sesion,.grid-cap{grid-template-columns:1fr}.head h1{font-size:22px}.head .hero-foot{flex-direction:column;align-items:flex-start;gap:12px}.head .badge-v{position:static;display:inline-block;margin-bottom:10px}body{padding:14px}}
+.sesion-pill{font-family:var(--m-mono);font-size:12px;font-weight:600;color:var(--m-ace);background:var(--m-ace-t);border:1px solid #F0C9BC;padding:9px 13px;border-radius:9px;white-space:nowrap;display:inline-block}
+.btn{font-family:var(--m-body);font-weight:600;font-size:12.5px;border:0;border-radius:9px;padding:11px 18px;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn-primary{background:var(--m-ace);color:#fff;box-shadow:0 2px 8px rgba(217,72,27,.28)}
+.btn-primary:hover{background:var(--m-ace-h)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.btn-add{background:#3d4250;color:#fff}
+.btn-add:hover{background:#2c313c}
+.btn-ghost{background:#fff;border:1px solid #e3e2dd;color:#5b6072}
+.btn-ghost:hover{background:#f7f6f3}
+.ext-wrap{margin-top:8px;display:none}.ext-wrap.on{display:block}
+/* table */
+.tbl{width:100%;border-collapse:collapse;margin-top:4px}
+.tbl th{font-family:var(--m-mono);font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--n-soft);text-align:left;padding:8px;border-bottom:1px solid var(--card-bd)}
+.tbl td{padding:7px 8px;border-bottom:1px solid #f1f0ec;vertical-align:top}
+.tbl tr.invalid td{background:#fdf4f3}
+.tbl input,.tbl select,.tbl textarea{font-size:13px;padding:7px 9px}
+.col-tipo{width:120px}.col-resp{width:172px}.col-fecha{width:150px}.col-x{width:38px;text-align:center}
+.row-x{background:none;border:0;color:var(--n-soft);font-size:20px;line-height:1;cursor:pointer;padding:4px 6px;border-radius:7px}
+.row-x:hover{background:#fdf4f3;color:var(--err)}
+.empty{text-align:center;color:var(--n-soft);font-size:13.5px;padding:24px}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;flex-wrap:wrap}
+.count{font-family:var(--m-mono);font-size:12px;color:var(--n-mid)}.count b{color:var(--m-ace);font-weight:600}
+.submitnote{font-size:12px;color:var(--n-mid);margin-top:8px}
+/* success */
+.success{display:none;text-align:center;padding:28px 24px}
+.success .ico{width:60px;height:60px;border-radius:50%;background:#f1faf4;color:var(--ok);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;border:1px solid #c4ecd2}
+.success .ico svg{width:30px;height:30px;stroke:var(--ok);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.success h2{font-family:var(--m-body);font-weight:800;color:var(--n-strong);font-size:20px}
+.success p{color:var(--n-mid);font-size:14px;margin-top:6px}
+.success ul{list-style:none;margin:16px auto 0;max-width:560px;text-align:left}
+.success li{font-size:13px;padding:9px 12px;border:1px solid var(--card-bd);border-radius:10px;margin-bottom:7px;display:flex;justify-content:space-between;gap:10px;background:#fff}
+.success li a{color:var(--m-ace);font-weight:600;text-decoration:none;white-space:nowrap}
+.foot{text-align:center;font-family:var(--m-mono);font-size:10px;color:var(--n-soft);margin:22px 0 6px;letter-spacing:.03em}
+.foot b{color:var(--n-mid);font-weight:600}
+
+/* Participantes de la sesión (v1.2) */
+.sesion-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+@media(max-width:760px){.sesion-layout{grid-template-columns:1fr}}
+.sesion-left .field{margin-bottom:14px}.sesion-left .field:last-child{margin-bottom:0}
+.parts-head{display:flex;align-items:center;gap:9px;margin-bottom:3px}
+.parts-head span:first-child{font-family:var(--m-body);font-weight:700;font-size:13px;color:var(--n-strong)}
+.parts-count{font-family:var(--m-mono);font-size:11px;font-weight:600;color:var(--m-ace);background:var(--m-ace-t);border-radius:20px;padding:1px 9px}
+.parts-hint{font-size:11.5px;color:var(--n-soft);margin-bottom:10px;line-height:1.45}
+.part{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--card-bd);border-radius:9px;padding:6px 6px 6px 11px;margin-bottom:6px}
+.p-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.p-name{font-size:12.5px;font-weight:600;color:var(--n-strong);line-height:1.2}
+.p-email{border:0;background:transparent;font-family:var(--m-mono);font-size:10.5px;color:var(--n-mid);padding:1px 0;width:100%}
+.p-email:focus{outline:0;color:var(--m-ace)}
+.p-x{background:none;border:0;color:var(--n-soft);font-size:18px;line-height:1;cursor:pointer;padding:2px 7px;border-radius:6px;flex:0 0 auto}
+.p-x:hover{background:#fdf4f3;color:var(--err)}
+.parts-add-btn{margin-top:4px;font-family:var(--m-body);font-weight:600;font-size:12px;color:var(--m-ace);background:var(--m-ace-t);border:1px dashed #E7B9A8;border-radius:9px;padding:8px 12px;cursor:pointer;width:100%}
+.parts-add-btn:hover{background:#f7ddd2}
+.add-panel{display:none;margin-top:10px;border:1px solid var(--card-bd);border-radius:11px;padding:12px;background:#faf9f6}
+.add-panel.on{display:block}
+.ap-t{font-family:var(--m-mono);font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--n-soft);margin:2px 0 8px}
+.add-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow:auto;margin-bottom:14px}
+.add-chip{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--card-bd);border-radius:8px;padding:7px 10px;cursor:pointer;text-align:left}
+.add-chip:hover{border-color:var(--m-ace)}
+.add-chip b{font-size:12.5px;color:var(--n-strong);font-weight:600}
+.add-chip span{flex:1;font-family:var(--m-mono);font-size:10px;color:var(--n-mid)}
+.add-chip i{font-style:normal;font-weight:700;color:var(--m-ace);font-size:16px}
+.ap-empty{font-size:11.5px;color:var(--n-soft);padding:4px 2px}
+.ap-new{display:grid;grid-template-columns:1fr 1fr auto;gap:8px}
+@media(max-width:520px){.ap-new{grid-template-columns:1fr}}
+.ap-new input{font-size:12.5px;padding:8px 10px}
+.mail-note{font-size:12px;color:var(--n-mid);margin:10px auto 0;max-width:560px;line-height:1.45}
+
+/* v1.4 */
+#parts-list{max-height:236px;overflow-y:auto;padding-right:4px}
+.modal-ovl{position:fixed;inset:0;background:rgba(10,17,56,.45);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:40px 16px;overflow:auto}
+.modal-ovl.on{display:flex}
+.modal-box{background:#fff;border:1px solid var(--card-bd);border-radius:16px;box-shadow:0 24px 60px rgba(10,17,56,.3);width:100%;max-width:460px;padding:20px 22px}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.modal-head span{font-family:var(--m-body);font-weight:800;font-size:16px;color:var(--n-strong)}
+.modal-x{background:none;border:0;font-size:24px;line-height:1;color:var(--n-soft);cursor:pointer;padding:0 6px;border-radius:8px}
+.modal-x:hover{background:#f1f0ec;color:var(--err)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="head">
+    <svg class="deco" viewBox="0 0 1000 220" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs><pattern id="d" width="15" height="15" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.6" fill="#5C6BFF" fill-opacity=".5"/></pattern>
+      <radialGradient id="o" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#3D6BFF" stop-opacity=".5"/><stop offset="1" stop-color="#3D6BFF" stop-opacity="0"/></radialGradient></defs>
+      <rect x="10" y="130" width="250" height="90" fill="url(#d)" opacity=".55"/><circle cx="920" cy="30" r="130" fill="url(#o)"/>
+    </svg>
+    <span class="badge-v">PMO · ACE · v1.5</span>
+    <h1>Registro de Acuerdos de Comité</h1>
+    <div class="sub">Documenta en vivo los acuerdos y actividades de las sesiones de decisión. Se depuran en la mesa de trabajo y, al cerrar la sesión, se registran en el tablero de la PMO.</div>
+    <div class="hero-foot">
+      <div class="meta">
+        <span class="mchip">ÓRGANO · <b>Comité de Negocio / Tecnológico</b></span>
+        <span class="mchip">ARTEFACTO · <b>Minuta / Registro de Acuerdos</b></span>
+      </div>
+      <div class="tagline">Decidir, acordar, dar seguimiento.</div>
+    </div>
+  </header>
+
+  <div class="banner" id="banner"></div>
+
+  <div id="app">
+    <!-- Sesión -->
+    <section class="card">
+      <span class="sec-eyebrow">Sesión</span>
+      <div class="sec-title">Datos de la sesión</div>
+      <div class="sec-desc">Se aplican a todos los registros capturados en esta sesión.</div>
+      <div class="sesion-layout">
+        <div class="sesion-left">
+          <div class="field">
+            <label class="lbl" for="comite">Comité</label>
+            <select id="comite">
+              <option value="">— Selecciona —</option>
+              <option>Comité de Negocio</option>
+              <option>Comité Tecnológico</option>
+              <option value="Otro">Otro…</option>
+            </select>
+          </div>
+          <div class="field" id="otro-wrap" style="display:none">
+            <label class="lbl" for="otro">Nombre de la sesión</label>
+            <input type="text" id="otro" placeholder="Ej. Comité de Arquitectura">
+          </div>
+          <div class="field">
+            <label class="lbl">Sesión (etiqueta)</label>
+            <div><span class="sesion-pill" id="sesion-pill">—</span></div>
+          </div>
+        </div>
+        <div class="sesion-right">
+          <div class="parts-head"><span>Participantes de la sesión</span><span class="parts-count" id="parts-count">0</span></div>
+          <div class="parts-hint">Predeterminados según el comité. Edita el correo, quita o agrega participantes; se les enviará el resumen al registrar.</div>
+          <div id="parts-list"></div>
+          <button type="button" class="parts-add-btn" id="parts-add-btn">+ Agregar participante</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Captura rápida -->
+    <section class="card">
+      <span class="sec-eyebrow">Captura rápida</span>
+      <div class="sec-title">Agregar a la mesa de trabajo</div>
+      <div class="sec-desc">Tres campos para no frenar la reunión. Luego puedes completar el detalle abajo. Aún no se envía a Monday.</div>
+      <div class="grid-cap">
+        <div>
+          <label class="lbl" for="q-acuerdo">Acuerdo / actividad</label>
+          <input type="text" id="q-acuerdo" placeholder="Enunciado corto">
+        </div>
+        <div>
+          <label class="lbl" for="q-resp">Responsable</label>
+          <select id="q-resp"></select>
+        </div>
+        <div>
+          <label class="lbl" for="q-fecha">Fecha compromiso</label>
+          <input type="date" id="q-fecha">
+        </div>
+        <div><button type="button" class="btn btn-add" id="q-add">Agregar</button></div>
+      </div>
+      <div class="ext-wrap" id="q-ext-wrap"><input type="text" id="q-ext" placeholder="Nombre y apellido del nuevo responsable"></div>
+    </section>
+
+    <!-- Mesa de trabajo -->
+    <section class="card">
+      <span class="sec-eyebrow">Mesa de trabajo</span>
+      <div class="sec-title">Acuerdos y actividades de la sesión</div>
+      <div class="sec-desc">Define el <b>tipo</b>, completa y depura. <b>Actividad</b> requiere responsable y fecha; <b>Acuerdo</b> solo se documenta (sin fecha).</div>
+      <table class="tbl">
+        <thead><tr>
+          <th class="col-tipo">Tipo</th><th>Acuerdo / actividad</th><th class="col-resp">Responsable</th><th class="col-fecha">Fecha compromiso</th><th>Notas</th><th class="col-x"></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty">Aún no hay registros. Usa la captura rápida o “Agregar nuevo”.</div>
+      <div class="toolbar">
+        <div class="count"><b id="count">0</b> registro(s) en borrador</div>
+        <div style="display:flex;gap:10px">
+          <button type="button" class="btn btn-ghost" id="add-row">+ Agregar nuevo</button>
+          <button type="button" class="btn btn-primary" id="register" disabled>Registrar en Monday</button>
+        </div>
+      </div>
+      <div class="submitnote" id="submitnote"></div>
+    </section>
+  </div>
+
+  <!-- Success -->
+  <section class="card success" id="success">
+    <div class="ico"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <h2 id="success-title">Registros creados</h2>
+    <p id="success-msg"></p>
+    <ul id="success-list"></ul>
+    <div id="mail-wrap" style="display:none;margin-top:14px">
+      <a id="mail-link" class="btn btn-add" style="text-decoration:none;display:inline-block" href="#">✉  Enviar correo a los participantes</a>
+      <div class="mail-note">Se abrirá tu cliente de correo con los participantes en “Para” y el resumen de la sesión (acuerdos y tareas). Revísalo y envía.</div>
+    </div>
+    <div style="margin-top:20px"><button class="btn btn-primary" id="nueva">Iniciar nueva sesión</button></div>
+  </section>
+
+  <div class="modal-ovl" id="add-modal">
+    <div class="modal-box">
+      <div class="modal-head"><span>Agregar participantes</span><button type="button" class="modal-x" id="add-close">&times;</button></div>
+      <div class="ap-t">Agregar de la lista</div>
+      <div class="add-list" id="add-list"></div>
+      <div class="ap-t">Nuevo participante — se guarda en la lista</div>
+      <div class="ap-new">
+        <input type="text" id="np-name" placeholder="Nombre y apellido">
+        <input type="text" id="np-email" placeholder="correo@dominio.com (opcional)">
+        <button type="button" class="btn btn-ghost" id="np-add">Guardar en lista</button>
+      </div>
+      <div style="margin-top:16px;text-align:right"><button type="button" class="btn btn-primary" id="add-done">Listo</button></div>
+    </div>
+  </div>
+
+  <div class="foot">PROGRAMA ACE · PMO &nbsp;·&nbsp; <b>Registro de Acuerdos de Comité</b> v1.5 &nbsp;·&nbsp; responsable→usuario Monday por correo (con alias) &nbsp;·&nbsp; datos en Monday (fuente única de verdad)</div>
+</div>
+
+<script src="monday-sdk.js"></script>
+<script>
+const BOARD_ID=18419790313, ACCOUNT_SLUG='gim-holdings-company', LS='ace_acuerdos_v1', PLS='ace_acuerdos_people_v1';
+const COL={tipo:'color_mm4spjkg', comite:'color_mm4sd2h5', sesion:'text_mm4stqgd', resp:'multiple_person_mm4s5yh0', fecha:'date_mm4sht8h', estatus:'color_mm4szjx9', notas:'long_text_mm4syjxq'};
+const MES=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const monday=(typeof mondaySdk!=='undefined')?mondaySdk():null;
+const $=id=>document.getElementById(id);
+let USERS=[], usersByEmail={}, drafts=[], session={comite:'',otro:'',participants:[]}, customPeople=[], uid=1;
+
+const P_NEG=[
+ {name:'Alejandro Revuelta',email:'arevuelta@gim.com.mx'},
+ {name:'Jaime Grez',email:'jgrez@gim.com.mx'},
+ {name:'Eduardo Sánchez',email:'esanchezlo@dap.com.mx'},
+ {name:'Jonathan Bravo',email:'jonathan.bravo@londoncg.mx'},
+ {name:'Héctor Vergara',email:'hvergara@dap.com.mx'}
+];
+const P_TEC_EXTRA=[
+ {name:'Elthon Rivas',email:'erivas@dap.com.mx'},
+ {name:'Humberto Trellez',email:'htrellez@dap.com.mx'},
+ {name:'Ivan Valdespin',email:'ivaldespin@hogaresunion.mx'},
+ {name:'Elicx Villaseca',email:'evillasecag@minsait.com'},
+ {name:'Luis Gomez',email:'lagomezm@minsait.com'},
+ {name:'Jonathan Rene Paz',email:'jrpaz@minsait.com'},
+ {name:'Jonathan Lozano',email:'jolozano@hogaresunion.mx'}
+];
+const PEOPLE={'Comité de Negocio':P_NEG,'Comité Tecnológico':P_NEG.concat(P_TEC_EXTRA),'Otro':[P_NEG[2],P_NEG[3]]};
+const MASTER=P_NEG.concat(P_TEC_EXTRA);
+const EMAIL_ALIAS={'jonathan.bravo@londoncg.mx':'jonathan.bravo@londoncg.com'};
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();}
+function defaultsFor(c){return (PEOPLE[c]||[]).map(x=>({name:x.name,email:x.email}));}
+function loadPeople(){try{const r=JSON.parse(localStorage.getItem(PLS));if(Array.isArray(r))customPeople=r;}catch(e){}}
+function savePeople(){try{localStorage.setItem(PLS,JSON.stringify(customPeople));}catch(e){}}
+function catalogList(){const seen=new Set(),out=[];MASTER.concat(customPeople).forEach(p=>{const k=((p.email||'').toLowerCase())||('n:'+norm(p.name));if(!seen.has(k)){seen.add(k);out.push(p);}});return out;}
+function addCatalogPerson(name,email){name=(name||'').trim();email=(email||'').trim();if(!name)return;const nk='n:'+norm(name),ek=email.toLowerCase();const exists=catalogList().some(p=>(ek&&(p.email||'').toLowerCase()===ek)||('n:'+norm(p.name))===nk);if(!exists){customPeople.push({name:name,email:email});savePeople();}}
+function updateCatalogEmail(name,email){const nk='n:'+norm(name);const hit=customPeople.find(p=>('n:'+norm(p.name))===nk);if(hit){hit.email=email;savePeople();}}
+function catalogEmail(name){const nk='n:'+norm(name);const p=catalogList().find(x=>('n:'+norm(x.name))===nk);return p?(p.email||''):'';}
+
+function todayLabel(){const n=new Date();return n.getDate()+MES[n.getMonth()]+String(n.getFullYear()).slice(-2);}
+function todayISO(){return new Date().toISOString().slice(0,10);}
+function sessionBase(){return session.comite==='Otro'?(session.otro||'').trim():session.comite;}
+function sessionLabel(){const b=sessionBase();return b?(b+' '+todayLabel()):'—';}
+function comiteLabel(){return session.comite==='Otro'?'Otro':session.comite;}
+function comiteName(){return session.comite==='Otro'?(session.otro||'Otro'):session.comite;}
+function acuerdoNota(){return 'Acuerdo tomado en '+comiteName()+' ('+sessionLabel()+')';}
+
+function save(){try{localStorage.setItem(LS,JSON.stringify({session,drafts,uid}));}catch(e){}}
+function load(){try{const r=JSON.parse(localStorage.getItem(LS));if(r){session=r.session||session;drafts=r.drafts||[];uid=r.uid||1;}}catch(e){}}
+function showBanner(m){const b=$('banner');b.textContent=m;b.classList.add('warn');}
+function refreshSession(){ $('sesion-pill').textContent=sessionLabel(); }
+
+/* Participantes */
+function renderParticipants(){
+  const c=$('parts-list'); if(!c)return; c.innerHTML='';
+  const arr=session.participants||[];
+  if(!arr.length){c.innerHTML='<div class="ap-empty">Selecciona un comité para cargar los participantes.</div>';$('parts-count').textContent='0';return;}
+  arr.forEach((p,i)=>{const d=document.createElement('div');d.className='part';
+    d.innerHTML='<div class="p-info"><span class="p-name">'+esc(p.name)+'</span><input class="p-email" data-i="'+i+'" value="'+esc(p.email)+'" placeholder="correo@dominio"></div><button class="p-x" data-i="'+i+'" title="Quitar">&times;</button>';
+    c.appendChild(d);});
+  $('parts-count').textContent=arr.length;
+}
+function renderAddList(){
+  const c=$('add-list'); if(!c)return; c.innerHTML='';
+  const have=new Set((session.participants||[]).map(p=>('n:'+norm(p.name))));
+  const avail=catalogList().filter(p=>!have.has('n:'+norm(p.name)));
+  if(!avail.length){c.innerHTML='<div class="ap-empty">Todos ya están agregados.</div>';return;}
+  avail.forEach(p=>{const b=document.createElement('button');b.type='button';b.className='add-chip';b.dataset.name=p.name;b.innerHTML='<b>'+esc(p.name)+'</b><span>'+(p.email?esc(p.email):'(sin correo)')+'</span><i>+</i>';c.appendChild(b);});
+}
+function openModal(){$('add-modal').classList.add('on');renderAddList();}
+function closeModal(){$('add-modal').classList.remove('on');}
+let _pw=false;
+function wireParticipants(){
+  if(_pw)return;_pw=true;
+  $('parts-list').addEventListener('input',e=>{if(e.target.classList.contains('p-email')){session.participants[+e.target.dataset.i].email=e.target.value;save();}});
+  $('parts-list').addEventListener('click',e=>{const x=e.target.closest('.p-x');if(x){session.participants.splice(+x.dataset.i,1);renderParticipants();renderAddList();save();}});
+  $('parts-add-btn').addEventListener('click',openModal);
+  $('add-close').addEventListener('click',closeModal);
+  $('add-done').addEventListener('click',closeModal);
+  $('add-modal').addEventListener('click',e=>{if(e.target.id==='add-modal')closeModal();});
+  $('add-list').addEventListener('click',e=>{const b=e.target.closest('.add-chip');if(!b)return;const p=catalogList().find(x=>norm(x.name)===norm(b.dataset.name));if(p){session.participants.push({name:p.name,email:p.email||''});renderParticipants();renderAddList();save();}});
+  $('np-add').addEventListener('click',()=>{const n=$('np-name').value.trim(),em=$('np-email').value.trim();if(!n)return;addCatalogPerson(n,em);$('np-name').value='';$('np-email').value='';renderAddList();$('q-resp').innerHTML=respSelectHTML('',true);});
+}
+
+/* Responsable desde el catálogo */
+function respSelectHTML(sel,allowNew){
+  let h='<option value="">— Selecciona —</option>';
+  catalogList().forEach(p=>{h+='<option value="'+esc(p.name)+'"'+((sel&&norm(sel)===norm(p.name))?' selected':'')+'>'+esc(p.name)+(p.email?'':' (sin correo)')+'</option>';});
+  if(allowNew)h+='<option value="__new__">+ Nuevo responsable…</option>';
+  return h;
+}
+
+/* Mesa de trabajo */
+function needEmail(d){return !!d.rname && !d.remail;}
+function renderTable(){
+  const tb=$('tbody'); tb.innerHTML='';
+  drafts.forEach(d=>{
+    const tr=document.createElement('tr'); tr.dataset.id=d.id;
+    tr.innerHTML=
+      '<td class="col-tipo"><select data-f="tipo"><option'+(d.tipo==='Actividad'?' selected':'')+'>Actividad</option><option'+(d.tipo==='Acuerdo'?' selected':'')+'>Acuerdo</option></select></td>'+
+      '<td><input type="text" data-f="acuerdo" value="'+esc(d.acuerdo)+'" placeholder="Enunciado"></td>'+
+      '<td class="col-resp"><select data-f="resp">'+respSelectHTML(d.rname,false)+'</select><div class="ext-wrap'+(needEmail(d)?' on':'')+'" data-ext><input type="text" data-f="remail" value="'+esc(d.remail||'')+'" placeholder="Correo del responsable"></div></td>'+
+      '<td class="col-fecha"><input type="date" data-f="fecha" value="'+(d.fecha||'')+'"></td>'+
+      '<td><textarea data-f="notas" placeholder="Opcional">'+esc(d.notas)+'</textarea></td>'+
+      '<td class="col-x"><button class="row-x" data-x title="Eliminar">&times;</button></td>';
+    tb.appendChild(tr);
+  });
+  $('empty').style.display=drafts.length?'none':'block';
+  $('count').textContent=drafts.length;
+  $('register').disabled=drafts.length===0;
+}
+function findDraft(id){return drafts.find(d=>String(d.id)===String(id));}
+
+$('tbody').addEventListener('input',e=>{
+  const f=e.target.dataset.f; if(!f)return;
+  const tr=e.target.closest('tr'); const d=findDraft(tr.dataset.id); if(!d)return;
+  if(f==='resp'){
+    d.rname=(e.target.value==='__new__')?'':e.target.value;
+    d.remail=d.rname?catalogEmail(d.rname):'';
+    const ext=tr.querySelector('[data-ext]'); tr.querySelector('[data-f="remail"]').value=d.remail||'';
+    ext.classList.toggle('on',needEmail(d));
+  } else if(f==='remail'){
+    d.remail=e.target.value; if(d.rname)updateCatalogEmail(d.rname,e.target.value);
+  } else if(f==='tipo'){
+    d.tipo=e.target.value;
+    if(d.tipo==='Acuerdo'){
+      d.fecha=todayISO(); tr.querySelector('[data-f="fecha"]').value=d.fecha;
+      if(!d.notas.trim()){d.notas=acuerdoNota(); tr.querySelector('[data-f="notas"]').value=d.notas;}
+    }
+  } else { d[f]=e.target.value; }
+  tr.classList.remove('invalid'); save();
+});
+$('tbody').addEventListener('click',e=>{if(e.target.dataset.x!==undefined){const tr=e.target.closest('tr');drafts=drafts.filter(d=>String(d.id)!==String(tr.dataset.id));renderTable();save();}});
+
+function addDraft(d){drafts.push(Object.assign({id:uid++,tipo:'Actividad',acuerdo:'',rname:'',remail:'',fecha:'',notas:''},d));save();renderTable();}
+
+/* Captura rápida */
+$('q-resp').addEventListener('change',e=>{$('q-ext-wrap').classList.toggle('on',e.target.value==='__new__');});
+$('q-add').addEventListener('click',()=>{
+  const ac=$('q-acuerdo').value.trim();
+  let rname='',remail='';
+  const rv=$('q-resp').value;
+  if(rv==='__new__'){ rname=$('q-ext').value.trim(); if(rname){addCatalogPerson(rname,'');remail='';} }
+  else if(rv){ rname=rv; remail=catalogEmail(rv); }
+  const fecha=$('q-fecha').value;
+  if(!ac && !rname && !fecha) return;
+  addDraft({tipo:'Actividad',acuerdo:ac,rname:rname,remail:remail,fecha:fecha});
+  $('q-acuerdo').value='';$('q-resp').value='';$('q-fecha').value='';$('q-ext').value='';$('q-ext-wrap').classList.remove('on');
+  $('q-resp').innerHTML=respSelectHTML('',true);
+  $('q-acuerdo').focus();
+});
+$('add-row').addEventListener('click',()=>addDraft({}));
+
+/* Sesión */
+$('comite').addEventListener('change',e=>{session.comite=e.target.value;$('otro-wrap').style.display=(e.target.value==='Otro')?'block':'none';session.participants=defaultsFor(e.target.value);renderParticipants();renderAddList();refreshSession();save();});
+$('otro').addEventListener('input',e=>{session.otro=e.target.value;refreshSession();save();});
+
+function validate(){
+  if(!sessionBase()){showBanner('Selecciona el comité de la sesión'+(session.comite==='Otro'?' (escribe el nombre).':'.'));$('comite').focus();return false;}
+  $('banner').classList.remove('warn');
+  if(!drafts.length)return false;
+  let ok=true;
+  document.querySelectorAll('#tbody tr').forEach(tr=>{
+    const d=findDraft(tr.dataset.id); let bad=false;
+    if(!d.acuerdo.trim())bad=true;
+    if(d.tipo==='Actividad'){ if(!d.fecha)bad=true; if(!d.rname)bad=true; }
+    tr.classList.toggle('invalid',bad); if(bad)ok=false;
+  });
+  return ok;
+}
+function mondayIdForPerson(name,email){const e=(email||'').toLowerCase();if(e&&usersByEmail[e])return usersByEmail[e].id;const n=norm(name);if(n){const u=USERS.find(x=>{const xn=norm(x.name);return xn===n||xn.startsWith(n)||n.startsWith(xn);});if(u)return u.id;}return null;}
+function colsFor(d,muId){
+  const v={};
+  v[COL.tipo]={label:d.tipo};
+  v[COL.comite]={label:comiteLabel()};
+  v[COL.sesion]=sessionLabel();
+  v[COL.estatus]={label:d.tipo==='Acuerdo'?'Documentado':'Pendiente'};
+  if(d.notas.trim())v[COL.notas]={text:d.notas.trim()};
+  if(muId)v[COL.resp]={personsAndTeams:[{id:parseInt(muId),kind:'person'}]};
+  if(d.fecha)v[COL.fecha]={date:d.fecha};
+  return v;
+}
+$('register').addEventListener('click',async()=>{
+  if(!validate()){$('submitnote').textContent='Revisa la sesión y los registros marcados.';return;}
+  if(!monday){$('submitnote').textContent='Abre la vista dentro de Monday para registrar.';return;}
+  const btn=$('register');btn.disabled=true;
+  const qCreate='mutation ($bid:ID!,$name:String!,$cols:JSON!){ create_item (board_id:$bid, item_name:$name, column_values:$cols, create_labels_if_missing:true){ id } }';
+  const qUpd='mutation ($iid:ID!,$body:String!){ create_update (item_id:$iid, body:$body){ id } }';
+  const created=[];
+  try{
+    for(let i=0;i<drafts.length;i++){
+      const d=drafts[i]; $('submitnote').textContent='Registrando '+(i+1)+' de '+drafts.length+'…';
+      const muId=mondayIdForPerson(d.rname,d.remail||catalogEmail(d.rname));
+      const res=await monday.api(qCreate,{variables:{bid:BOARD_ID,name:(d.acuerdo.trim()||'(sin título)'),cols:JSON.stringify(colsFor(d,muId))}});
+      const id=res&&res.data&&res.data.create_item?res.data.create_item.id:null;
+      if(!id)throw new Error('Sin id en el registro '+(i+1));
+      if(!muId && d.rname){ await monday.api(qUpd,{variables:{iid:id,body:'Responsable: '+d.rname+(d.remail?(' · '+d.remail):'')}}); }
+      created.push({id:id,name:d.acuerdo.trim()||'(sin título)',tipo:d.tipo});
+    }
+    const mailHref=(session.participants&&session.participants.length)?buildMailto():null;
+    drafts=[]; save();
+    $('app').style.display='none';
+    if(mailHref){ $('mail-link').href=mailHref; $('mail-wrap').style.display='block'; try{$('mail-link').click();}catch(e){} } else { $('mail-wrap').style.display='none'; }
+    $('success-title').textContent=created.length+' registro(s) creado(s)';
+    $('success-msg').textContent='Sesión: '+sessionLabel();
+    $('success-list').innerHTML=created.map(c=>'<li><span>'+esc(c.name)+' · '+c.tipo+'</span><a target="_blank" rel="noopener" href="https://'+ACCOUNT_SLUG+'.monday.com/boards/'+BOARD_ID+'/pulses/'+c.id+'">Ver →</a></li>').join('');
+    $('success').style.display='block';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(err){ btn.disabled=false; $('submitnote').textContent='Error: '+(err.message||err)+'. No todos se registraron; revisa el tablero antes de reintentar.'; }
+});
+$('nueva').addEventListener('click',()=>{ try{localStorage.removeItem(LS);}catch(e){} location.reload(); });
+
+function buildMailto(){
+  const to=(session.participants||[]).map(p=>p.email).filter(Boolean).join(',');
+  const acs=drafts.filter(d=>d.tipo==='Acuerdo'), acts=drafts.filter(d=>d.tipo==='Actividad');
+  const L=[];
+  L.push('Sesión: '+sessionLabel());
+  L.push('Comité: '+comiteName());
+  L.push('Fecha: '+todayISO());
+  L.push(''); L.push('PARTICIPANTES:');
+  (session.participants||[]).forEach(p=>L.push('- '+p.name+(p.email?(' <'+p.email+'>'):'')));
+  L.push(''); L.push('ACUERDOS ('+acs.length+'):');
+  acs.length?acs.forEach((d,i)=>L.push((i+1)+'. '+d.acuerdo)):L.push('- (ninguno)');
+  L.push(''); L.push('ACTIVIDADES / TAREAS COMPROMISO ('+acts.length+'):');
+  acts.length?acts.forEach((d,i)=>L.push((i+1)+'. '+d.acuerdo+(d.rname?(' | Responsable: '+d.rname+(d.remail?(' <'+d.remail+'>'):'')):'')+(d.fecha?(' | Compromiso: '+d.fecha):''))):L.push('- (ninguna)');
+  L.push(''); L.push('— Registrado en Monday · Acuerdos y Actividades de Comités ACE');
+  return 'mailto:'+to+'?subject='+encodeURIComponent('Acuerdos y actividades — '+sessionLabel())+'&body='+encodeURIComponent(L.join('\n'));
+}
+
+async function init(){
+  load(); loadPeople();
+  if(session.comite){$('comite').value=session.comite;if(session.comite==='Otro'){$('otro-wrap').style.display='block';$('otro').value=session.otro||'';}}
+  refreshSession();
+  if(!Array.isArray(session.participants))session.participants=session.comite?defaultsFor(session.comite):[];
+  renderParticipants(); renderAddList(); wireParticipants();
+  $('q-resp').innerHTML=respSelectHTML('',true);
+  renderTable();
+  if(!monday){ showBanner('Vista fuera de Monday: demostración. Ábrela dentro de Monday para registrar.'); return; }
+  try{ const u=await monday.api('query { users (kind: non_guests) { id name email } }'); USERS=((u.data&&u.data.users)||[]).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    usersByEmail={}; USERS.forEach(x=>{if(x.email)usersByEmail[x.email.toLowerCase()]=x;});
+    Object.keys(EMAIL_ALIAS).forEach(a=>{const t=usersByEmail[EMAIL_ALIAS[a].toLowerCase()];if(t)usersByEmail[a.toLowerCase()]=t;}); }
+  catch(e){ showBanner('No se pudieron cargar los usuarios de Monday (para asignar responsables internos).'); }
+}
+init();
+</script>
+</body>
+</html>
