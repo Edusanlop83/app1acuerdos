@@ -1,4 +1,4 @@
-<!-- ACE_Registro_Acuerdos_Comite v1.7 — Botón "Ver resumen de la sesión" en la mesa de trabajo y en la pantalla de éxito, que abre un modal amplio con el resumen (participantes, acuerdos, actividades) con diseño ACE. v1.6 — El correo ya no se abre automáticamente al registrar; solo desde el botón de la pantalla final. Cuerpo con formato definido (Comité|Sesión|Fecha, separadores, participantes, acuerdos con Fecha, actividades con Responsable y Compromiso, pie PMO). Botón "Ver acuerdos y actividades en Monday" (enlace al tablero). v1.5 — Emparejamiento responsable->usuario de Monday por CORREO (alias jonathan.bravo@londoncg.mx->.com) con respaldo por nombre; si no hay usuario de Monday, el responsable va a update nativo. Ivan Valdespin (sin acento) en catalogo. v1.4 — Lista de participantes con scroll (4 visibles); alta de participantes en popup; responsable (captura rápida y mesa) desde el catálogo de la app con alta rápida solo-nombre y catálogo persistente; completar correo del responsable en la mesa; al elegir Tipo=Acuerdo se autollenan fecha (hoy) y notas (editables). v1.3 — Jonathan Lozano añadido a Comité Tecnológico; los participantes nuevos se guardan en un catálogo persistente (localStorage) para futuras sesiones y se añaden a la sesión con el +. v1.2 — Panel de participantes por comité (predeterminados editables/agregables) y correo de resumen (mailto) a los participantes al registrar. v1.1 — Estética alineada a la Guía Visual del Programa ACE (hero ACE + cuerpo estilo Monday: Figtree/JetBrains Mono, lienzo cálido, acento #D9481B). Lógica sin cambios. v1.0 — App de minutas para Comité de Negocio y Comité Tecnológico. Captura acuerdos/actividades en una mesa de trabajo (borrador con localStorage), se depuran en sesión y al pulsar "Registrar" se crean en el tablero Monday "Acuerdos y Actividades de Comités ACE" (18419790313). Responsable externo -> update nativo del elemento. -->
+<!-- ACE_Registro_Acuerdos_Comite v1.8 — Cuerpo del correo (texto plano, mailto) con estructura mejorada: título, meta Comité|Sesión|Fecha, separadores, participantes/acuerdos/actividades numerados, pie PMO y enlace al tablero. v1.7 — Botón "Ver resumen de la sesión" en la mesa de trabajo y en la pantalla de éxito, que abre un modal amplio con el resumen (participantes, acuerdos, actividades) con diseño ACE. v1.6 — El correo ya no se abre automáticamente al registrar; solo desde el botón de la pantalla final. Cuerpo con formato definido (Comité|Sesión|Fecha, separadores, participantes, acuerdos con Fecha, actividades con Responsable y Compromiso, pie PMO). Botón "Ver acuerdos y actividades en Monday" (enlace al tablero). v1.5 — Emparejamiento responsable->usuario de Monday por CORREO (alias jonathan.bravo@londoncg.mx->.com) con respaldo por nombre; si no hay usuario de Monday, el responsable va a update nativo. Ivan Valdespin (sin acento) en catalogo. v1.4 — Lista de participantes con scroll (4 visibles); alta de participantes en popup; responsable (captura rápida y mesa) desde el catálogo de la app con alta rápida solo-nombre y catálogo persistente; completar correo del responsable en la mesa; al elegir Tipo=Acuerdo se autollenan fecha (hoy) y notas (editables). v1.3 — Jonathan Lozano añadido a Comité Tecnológico; los participantes nuevos se guardan en un catálogo persistente (localStorage) para futuras sesiones y se añaden a la sesión con el +. v1.2 — Panel de participantes por comité (predeterminados editables/agregables) y correo de resumen (mailto) a los participantes al registrar. v1.1 — Estética alineada a la Guía Visual del Programa ACE (hero ACE + cuerpo estilo Monday: Figtree/JetBrains Mono, lienzo cálido, acento #D9481B). Lógica sin cambios. v1.0 — App de minutas para Comité de Negocio y Comité Tecnológico. Captura acuerdos/actividades en una mesa de trabajo (borrador con localStorage), se depuran en sesión y al pulsar "Registrar" se crean en el tablero Monday "Acuerdos y Actividades de Comités ACE" (18419790313). Responsable externo -> update nativo del elemento. -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -165,7 +165,7 @@ input:focus,textarea:focus,select:focus{outline:0;border-color:var(--m-ace);box-
       <radialGradient id="o" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#3D6BFF" stop-opacity=".5"/><stop offset="1" stop-color="#3D6BFF" stop-opacity="0"/></radialGradient></defs>
       <rect x="10" y="130" width="250" height="90" fill="url(#d)" opacity=".55"/><circle cx="920" cy="30" r="130" fill="url(#o)"/>
     </svg>
-    <span class="badge-v">PMO · ACE · v1.7</span>
+    <span class="badge-v">PMO · ACE · v1.8</span>
     <h1>Registro de Acuerdos de Comité</h1>
     <div class="sub">Documenta en vivo los acuerdos y actividades de las sesiones de decisión. Se depuran en la mesa de trabajo y, al cerrar la sesión, se registran en el tablero de la PMO.</div>
     <div class="hero-foot">
@@ -302,7 +302,7 @@ input:focus,textarea:focus,select:focus{outline:0;border-color:var(--m-ace);box-
     </div>
   </div>
 
-  <div class="foot">PROGRAMA ACE · PMO &nbsp;·&nbsp; <b>Registro de Acuerdos de Comité</b> v1.7 &nbsp;·&nbsp; resumen de sesión (estilo ACE) + correo manual + enlace al tablero &nbsp;·&nbsp; datos en Monday (fuente única de verdad)</div>
+  <div class="foot">PROGRAMA ACE · PMO &nbsp;·&nbsp; <b>Registro de Acuerdos de Comité</b> v1.8 &nbsp;·&nbsp; correo (texto plano) con estructura mejorada + enlace al tablero &nbsp;·&nbsp; datos en Monday (fuente única de verdad)</div>
 </div>
 
 <script src="monday-sdk.js"></script>
@@ -523,20 +523,25 @@ $('register').addEventListener('click',async()=>{
 $('nueva').addEventListener('click',()=>{ try{localStorage.removeItem(LS);}catch(e){} location.reload(); });
 
 function buildMailto(){
-  const SEP='────────────────────────────────────────';
+  const BOARD_URL='https://gim-holdings-company.monday.com/boards/18419790313';
+  const SEP='════════════════════════════════════════';
   const to=(session.participants||[]).map(p=>p.email).filter(Boolean).join(',');
   const acs=drafts.filter(d=>d.tipo==='Acuerdo'), acts=drafts.filter(d=>d.tipo==='Actividad');
   const L=[];
+  L.push('ACUERDOS Y ACTIVIDADES DE COMITÉ');
   L.push('Comité: '+comiteName()+'  |  Sesión: '+sessionLabel()+'  |  Fecha: '+todayISO());
   L.push(SEP);
-  L.push('PARTICIPANTES:');
-  (session.participants||[]).forEach(p=>L.push('- '+p.name+(p.email?(' <'+p.email+'>'):'')));
-  L.push(''); L.push('ACUERDOS ('+acs.length+'):');
-  acs.length?acs.forEach((d,i)=>L.push((i+1)+'. '+d.acuerdo+'  |  Fecha: '+(d.fecha||todayISO()))):L.push('- (ninguno)');
-  L.push(''); L.push('ACTIVIDADES / TAREAS COMPROMISO ('+acts.length+'):');
-  acts.length?acts.forEach((d,i)=>L.push((i+1)+'. '+d.acuerdo+(d.rname?('  |  Responsable: '+d.rname+(d.remail?(' <'+d.remail+'>'):'')):'')+(d.fecha?('  |  Compromiso: '+d.fecha):''))):L.push('- (ninguna)');
+  L.push('PARTICIPANTES ('+(session.participants||[]).length+'):');
+  (session.participants||[]).forEach((p,i)=>L.push('  '+(i+1)+'. '+p.name+(p.email?(' <'+p.email+'>'):'')));
+  L.push('');
+  L.push('ACUERDOS ('+acs.length+'):');
+  acs.length?acs.forEach((d,i)=>L.push('  '+(i+1)+'. '+d.acuerdo+'  |  Fecha: '+(d.fecha||todayISO()))):L.push('  (ninguno)');
+  L.push('');
+  L.push('ACTIVIDADES / TAREAS COMPROMISO ('+acts.length+'):');
+  acts.length?acts.forEach((d,i)=>L.push('  '+(i+1)+'. '+d.acuerdo+(d.rname?('  |  Responsable: '+d.rname+(d.remail?(' <'+d.remail+'>'):'')):'')+(d.fecha?('  |  Compromiso: '+d.fecha):''))):L.push('  (ninguna)');
   L.push(SEP);
-  L.push('* PMO — Registro realizado en el tablero de Monday "Acuerdos y Actividades de Comités ACE" para su gestión y control.');
+  L.push('PMO — Registro realizado en el tablero de Monday "Acuerdos y Actividades de Comités ACE" para su gestión y control.');
+  L.push('Ver en el tablero: '+BOARD_URL);
   return 'mailto:'+to+'?subject='+encodeURIComponent('Acuerdos y actividades — '+sessionLabel())+'&body='+encodeURIComponent(L.join('\n'));
 }
 
